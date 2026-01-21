@@ -11,21 +11,31 @@ import (
 // var _ = os.Exit
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
 
-	// Uncomment the code below to pass the first stage
-	
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
-	conn, err := l.Accept()
-	fmt.Println("Connected!")
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+
+	for {
+		conn, err := l.Accept()
+		fmt.Println("Connected!")
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			continue
+		}
+		for {
+			b := make([]byte, 1024)
+			n, err := conn.Read(b)
+			if err != nil {
+				break
+			}
+			fmt.Println(n)
+			fmt.Println("Incoming: ", string(b[:n]))
+			conn.Write([]byte("+PONG\r\n"))
+		}
+		conn.Close()
 	}
-	conn.Write([]byte("+PONG\r\n"))
 }
